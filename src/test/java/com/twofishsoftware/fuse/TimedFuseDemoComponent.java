@@ -36,4 +36,9 @@ public class TimedFuseDemoComponent {
     public void except() {
             throw new RuntimeException("Test Exception");
     }
+
+    @TimedFuse(timeoutMs = 500, permittedFailures = 3, monitorDurationMs = 10*1000, resetDurationMs = 10*1000)
+    public String str() {
+        return "Test String";
+    }
 }

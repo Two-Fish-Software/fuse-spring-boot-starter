@@ -50,6 +50,13 @@ public class TimedFuseTest {
     }
 
     @Test
+    public void shouldReturnString() {
+        stateProvider.Reset();
+        String str = demoComponent.str();
+        assertEquals("Test String", str);
+    }
+
+    @Test
     public void shouldThrowTimedFuseException() {
         stateProvider.Reset();
         assertThrows(TimedFuseException.class, () -> demoComponent.pause(1000));

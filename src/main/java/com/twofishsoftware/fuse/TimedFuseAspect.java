@@ -85,7 +85,7 @@ public class TimedFuseAspect {
             }
 
             stateProvider.LogSuccess(longMethodName);
-            return proceed;
+            return proceed.get();
             }
         else {
             try {

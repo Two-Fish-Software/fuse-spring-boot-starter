@@ -1,14 +1,20 @@
 plugins {
     id 'org.springframework.boot' version '3.2.7' apply false
     id 'io.spring.dependency-management' version '1.1.6'
-    id 'java'
+    id 'java-library'
+    id 'maven-publish'
+    id 'signing'
+    id 'tech.yanand.maven-central-publish' version '1.2.0'
 }
 
 group = 'com.twofishsoftware'
-version = '1.0.0'
+version = '1.0.2'
 
 java {
     sourceCompatibility = '21'
+    // Sonatype officially requires Java source and Java doc
+    withJavadocJar()
+    withSourcesJar()
 }
 
 repositories {
@@ -16,8 +22,11 @@ repositories {
 }
 
 dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter'
-    implementation 'org.springframework.boot:spring-boot-starter-aop'
+    compileOnly 'org.springframework.boot:spring-boot-starter'
+    compileOnly 'org.springframework.boot:spring-boot-starter-aop'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter'
+    testImplementation 'org.springframework.boot:spring-boot-starter-aop'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 
@@ -33,4 +42,86 @@ test {
 
 wrapper {
     gradleVersion = '8.5'
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+
+            /*
+            // By marking our dependencies as compileOnly and testImplementation, there is no dependency
+            // information to include with the publication. This will allow this starter to work with
+            // future versions of Spring Boot
+            versionMapping {
+                usage('java-api') {
+                    fromResolutionOf('runtimeClasspath')
+                }
+                usage('java-runtime') {
+                    fromResolutionResult()
+                }
+            }
+            */
+
+            pom {
+                //groupId = 'com.twofishsoftware'
+                //name = 'fuse-spring-boot-starter'
+                description = 'A Spring Boot Starter that provides annotations and functionality for Timed Fuses-- a simplification of the Circuit Breaker pattern.'
+                url = 'https://github.com/Two-Fish-Software/fuse-spring-boot-starter'
+                packaging = 'jar' // jar is the default, but still set it to make it clear
+
+                // Your choosen license
+                // Use https://choosealicense.com/ to decide, if you need help.
+                licenses {
+                    license {
+                        name = 'The Apache License, Version 2.0'
+                        url = 'https://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+
+                scm {
+                    url = 'https://github.com/Two-Fish-Software/fuse-spring-boot-starter'
+                    connection = 'scm:git://github.com:Two-Fish-Software/fuse-spring-boot-starter'
+                    developerConnection = 'scm:git://github.com:Two-Fish-Software/fuse-spring-boot-starter'
+                }
+
+                developers {
+                    developer {
+                        id = 'psyklopz'
+                        name = 'Eric Wright'
+                    }
+                }
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            name = "Local"
+            url = layout.buildDirectory.dir('repos/bundles')
+        }
+    }
+}
+
+signing {
+    // About GPG signing, please refer to https://central.sonatype.org/publish/requirements/gpg/
+    def signingKey = System.getenv("GPG_KEY")
+    def signingPassword = System.getenv("GPG_PASSWORD")
+    useInMemoryPgpKeys(signingKey, signingPassword)
+
+    sign publishing.publications.mavenJava
+}
+
+mavenCentral {
+    repoDir = layout.buildDirectory.dir('repos/bundles')
+    // Token for Publisher API calls obtained from Sonatype official,
+    // it should be Base64 encoded of "username:password".
+    authToken =  System.getenv("SONATYPE_AUTH_TOKEN")
+    // Whether the upload should be automatically published or not. Use 'USER_MANAGED' if you wish to do this manually.
+    // This property is optional and defaults to 'AUTOMATIC'.
+    publishingType = 'USER_MANAGED'
+    // Max wait time for status API to get 'PUBLISHING' or 'PUBLISHED' status when the publishing type is 'AUTOMATIC',
+    // or additionally 'VALIDATED' when the publishing type is 'USER_MANAGED'.
+    // This property is optional and defaults to 60 seconds.
+    maxWait = 60
 }
