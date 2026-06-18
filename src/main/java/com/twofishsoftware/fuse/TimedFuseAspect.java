@@ -46,12 +46,9 @@ public class TimedFuseAspect {
             String longMethodName = signature.toLongString();
             TimedFuse timedFuse = method.getAnnotation(TimedFuse.class);
 
-            TimedFuseState state = stateProvider.GetState(longMethodName);
-            if (state == null) {
-                stateProvider.CreateState(longMethodName, timedFuse.permittedFailures(), timedFuse.monitorDurationMs(), timedFuse.resetDurationMs());
-            }
+            stateProvider.createState(longMethodName, timedFuse.permittedFailures(), timedFuse.monitorDurationMs(), timedFuse.resetDurationMs());
 
-            if (!stateProvider.IsClosed(longMethodName)) {
+            if (!stateProvider.isClosed(longMethodName)) {
                 throw new TimedFuseException("The timed fuse around " + shortMethodName + " is opened.");
             }
 
@@ -70,23 +67,25 @@ public class TimedFuseAspect {
 
                 if (thread.isAlive()) {
                     thread.interrupt();
-                    stateProvider.LogTimeout(longMethodName); // timeout
+                    stateProvider.logTimeout(longMethodName); // timeout
                     throw new TimedFuseException("The timed fuse around " + shortMethodName + " exceeded its execution timeout.");
                 }
                 else if (throwable.get() != null) {
-                    stateProvider.LogException(longMethodName, throwable.get()); // exception
+                    if (timedFuse.treatExceptionsAsFailures()) {
+                        stateProvider.logException(longMethodName, throwable.get()); // exception
+                    }
                     throw new TimedFuseException(throwable.get());
                 }
 
             }
             catch (InterruptedException e) {
-                stateProvider.LogException(longMethodName, throwable.get());
+                stateProvider.logException(longMethodName, throwable.get());
                 throw new RuntimeException(e);
             }
 
-            stateProvider.LogSuccess(longMethodName);
+            stateProvider.logSuccess(longMethodName);
             return proceed.get();
-            }
+        }
         else {
             try {
                 return joinPoint.proceed();

@@ -20,53 +20,50 @@ package com.twofishsoftware.fuse;
 import org.springframework.stereotype.Service;
 
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicReference;
 
 @Service
 public class TimedFuseStateProvider {
 
-    private final ConcurrentHashMap<String, AtomicReference<TimedFuseState>> states = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, TimedFuseState> states = new ConcurrentHashMap<>();
 
-    public void Reset() {
+    public void reset() {
         states.clear();
     }
 
-    public TimedFuseState GetState(String name) {
-        if (!states.containsKey(name)) {
-            return null;
+    public TimedFuseState getState(String name) {
+        return states.get(name);
+    }
+
+    public void createState(String name, int permittedFailures, int monitorDurationMs, int resetDurationMs) {
+        states.computeIfAbsent(name, k -> new TimedFuseState(permittedFailures, monitorDurationMs, resetDurationMs));
+    }
+
+    public boolean isClosed(String name) {
+        TimedFuseState state = states.get(name);
+        if (state == null) {
+            return true;
         }
-        return states.get(name).get();
+        return state.isClosed();
     }
 
-    public void CreateState(String name, Integer permittedFailures, Integer monitorDurationMs, Integer resetDurationMs) {
-        TimedFuseState state = new TimedFuseState(permittedFailures, monitorDurationMs, resetDurationMs);
-        states.put(name, new AtomicReference<>(state));
-    }
-
-    public boolean IsClosed(String name) {
-        if (!states.containsKey(name)) {
-            return false;
-        }
-        return states.get(name).get().IsClosed();
-    }
-
-    public void LogSuccess(String name) {
-        if (states.containsKey(name)) {
-            TimedFuseState state = states.get(name).get();
-            state.LogSuccess();
-            states.get(name).set(state);
+    public void logSuccess(String name) {
+        TimedFuseState state = states.get(name);
+        if (state != null) {
+            state.logSuccess();
         }
     }
 
-    public void LogTimeout(String name) {
-        if (states.containsKey(name)) {
-            TimedFuseState state = states.get(name).get();
-            state.LogFailure();
-            states.get(name).set(state);
+    public void logTimeout(String name) {
+        TimedFuseState state = states.get(name);
+        if (state != null) {
+            state.logFailure();
         }
     }
 
-    public void LogException(String name, Throwable throwable) {
-        // TODO: determine if I want it to handle exceptions or not
+    public void logException(String name, Throwable throwable) {
+        TimedFuseState state = states.get(name);
+        if (state != null) {
+            state.logFailure();
+        }
     }
 }

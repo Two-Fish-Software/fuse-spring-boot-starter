@@ -18,17 +18,19 @@
 package com.twofishsoftware.fuse;
 
 import java.time.Instant;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class TimedFuseState {
-    private final Integer permittedFailures;
-    private final Integer monitorDuration;
-    private final Integer resetDuration;
+    private final int permittedFailures;
+    private final int monitorDuration;
+    private final int resetDuration;
+    private final ReentrantLock lock = new ReentrantLock();
 
     private TimedFuseStatus status;
     private Instant nextReset;
-    private Integer failures;
+    private int failures;
 
-    public TimedFuseState(Integer permittedFailures, Integer monitorDuration, Integer resetDuration) {
+    public TimedFuseState(int permittedFailures, int monitorDuration, int resetDuration) {
         super();
         this.permittedFailures = permittedFailures;
         this.monitorDuration = monitorDuration;
@@ -37,72 +39,90 @@ public class TimedFuseState {
         this.failures = 0;
     }
 
-    public boolean IsClosed() {
-        switch(status) {
-            case OPEN -> {
-                if (Instant.now().isAfter(nextReset)) {
-                    status = TimedFuseStatus.CLOSING;
+    public boolean isClosed() {
+        lock.lock();
+        try {
+            switch (status) {
+                case OPEN -> {
+                    if (Instant.now().isAfter(nextReset)) {
+                        status = TimedFuseStatus.CLOSING;
+                        return true;
+                    }
+                    else {
+                        return false;
+                    }
+                }
+                default -> {
                     return true;
                 }
-                else {
-                    return false;
-                }
             }
-            default -> {
-                return true;
-            }
+        }
+        finally {
+            lock.unlock();
         }
     }
 
-    public void LogSuccess() {
-        switch(status) {
-            case CLOSING -> {
-                status = TimedFuseStatus.CLOSED;
-                failures = 0;
-            }
-            case OPENING -> {
-                if (Instant.now().isAfter(nextReset)) {
+    public void logSuccess() {
+        lock.lock();
+        try {
+            switch (status) {
+                case CLOSING -> {
                     status = TimedFuseStatus.CLOSED;
                     failures = 0;
                 }
+                case OPENING -> {
+                    status = TimedFuseStatus.CLOSED;
+                    failures = 0;
+                }
+                default -> {
+                }
             }
-            default -> {}
+        }
+        finally {
+            lock.unlock();
         }
     }
 
-    public void LogFailure() {
-        switch(status) {
-            case CLOSING -> {
-                status = TimedFuseStatus.OPEN;
-                nextReset = Instant.now().plusMillis(resetDuration);
-            }
-            case CLOSED -> {
-                failures = 1;
-                if (failures >= permittedFailures) {
+    public void logFailure() {
+        lock.lock();
+        try {
+            switch (status) {
+                case CLOSING -> {
                     status = TimedFuseStatus.OPEN;
                     nextReset = Instant.now().plusMillis(resetDuration);
                 }
-                else {
-                    status = TimedFuseStatus.OPENING;
-                    nextReset = Instant.now().plusMillis(monitorDuration);
+                case CLOSED -> {
+                    failures = 1;
+                    if (failures >= permittedFailures) {
+                        status = TimedFuseStatus.OPEN;
+                        nextReset = Instant.now().plusMillis(resetDuration);
+                    }
+                    else {
+                        status = TimedFuseStatus.OPENING;
+                        nextReset = Instant.now().plusMillis(monitorDuration);
+                    }
                 }
-            }
-            case OPENING -> {
-                if (Instant.now().isBefore(nextReset)) {
+                case OPENING -> {
+                    if (Instant.now().isBefore(nextReset)) {
+                        failures++;
+                    }
+                    else {
+                        failures = 1;
+                        nextReset = Instant.now().plusMillis(monitorDuration);
+                    }
+                    if (failures >= permittedFailures) {
+                        status = TimedFuseStatus.OPEN;
+                        nextReset = Instant.now().plusMillis(resetDuration);
+                    }
+                }
+                case OPEN -> {
+                    nextReset = Instant.now().plusMillis(resetDuration);
                     failures++;
                 }
-                else {
-                    failures = 1;
-                }
-                if (failures >= permittedFailures) {
-                    status = TimedFuseStatus.OPEN;
-                    nextReset = Instant.now().plusMillis(resetDuration);
-                }
             }
-            case OPEN -> {
-                nextReset = Instant.now().plusMillis(resetDuration);
-                failures++;
-            }
+        }
+        finally {
+            lock.unlock();
         }
     }
 }

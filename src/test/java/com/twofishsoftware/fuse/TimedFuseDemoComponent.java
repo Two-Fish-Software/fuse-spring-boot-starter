@@ -32,7 +32,7 @@ public class TimedFuseDemoComponent {
         }
     }
 
-    @TimedFuse(timeoutMs = 500, permittedFailures = 3, monitorDurationMs = 10*1000, resetDurationMs = 10*1000)
+    @TimedFuse(timeoutMs = 500, permittedFailures = 3, monitorDurationMs = 10*1000, resetDurationMs = 10*1000, treatExceptionsAsFailures = true)
     public void except() {
             throw new RuntimeException("Test Exception");
     }

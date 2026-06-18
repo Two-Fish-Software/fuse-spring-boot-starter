@@ -25,8 +25,9 @@ import java.lang.annotation.Target;
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface TimedFuse {
-    int timeoutMs();
-    int permittedFailures();
-    int monitorDurationMs();
-    int resetDurationMs();
+    int timeoutMs() default 1000;
+    int permittedFailures() default 5;
+    int monitorDurationMs() default 60000;
+    int resetDurationMs() default 60000;
+    boolean treatExceptionsAsFailures() default false;
 }

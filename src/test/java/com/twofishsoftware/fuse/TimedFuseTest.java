@@ -45,64 +45,64 @@ public class TimedFuseTest {
 
     @Test
     public void shouldFinishInTime() {
-        stateProvider.Reset();
+        stateProvider.reset();
         demoComponent.pause(100);
     }
 
     @Test
     public void shouldReturnString() {
-        stateProvider.Reset();
+        stateProvider.reset();
         String str = demoComponent.str();
         assertEquals("Test String", str);
     }
 
     @Test
     public void shouldThrowTimedFuseException() {
-        stateProvider.Reset();
+        stateProvider.reset();
         assertThrows(TimedFuseException.class, () -> demoComponent.pause(1000));
     }
 
     @Test
     public void shouldThrowRuntimeException() {
-        stateProvider.Reset();
+        stateProvider.reset();
         assertThrows(RuntimeException.class, () -> demoComponent.except());
     }
 
     @Test
     public void fuseShouldOpenAfterRepeatedTimeouts() {
-        stateProvider.Reset();
+        stateProvider.reset();
         assertThrows(TimedFuseException.class, () -> demoComponent.pause(1000));
 
-        assertTrue(stateProvider.GetState(PAUSE_NAME).IsClosed());
-
-        assertThrows(TimedFuseException.class, () -> demoComponent.pause(1000));
-
-        assertTrue(stateProvider.GetState(PAUSE_NAME).IsClosed());
+        assertTrue(stateProvider.getState(PAUSE_NAME).isClosed());
 
         assertThrows(TimedFuseException.class, () -> demoComponent.pause(1000));
 
-        assertFalse(stateProvider.GetState(PAUSE_NAME).IsClosed());
+        assertTrue(stateProvider.getState(PAUSE_NAME).isClosed());
+
+        assertThrows(TimedFuseException.class, () -> demoComponent.pause(1000));
+
+        assertFalse(stateProvider.getState(PAUSE_NAME).isClosed());
 
         // This will throw because it's opened
         assertThrows(TimedFuseException.class, () -> demoComponent.pause(10));
 
-        assertFalse(stateProvider.GetState(PAUSE_NAME).IsClosed());
+        assertFalse(stateProvider.getState(PAUSE_NAME).isClosed());
     }
 
     @Test
     public void fuseShouldCloseAfterResetDuration() {
-        stateProvider.Reset();
+        stateProvider.reset();
         assertThrows(TimedFuseException.class, () -> demoComponent.pause(1000));
 
-        assertTrue(stateProvider.GetState(PAUSE_NAME).IsClosed());
-
-        assertThrows(TimedFuseException.class, () -> demoComponent.pause(1000));
-
-        assertTrue(stateProvider.GetState(PAUSE_NAME).IsClosed());
+        assertTrue(stateProvider.getState(PAUSE_NAME).isClosed());
 
         assertThrows(TimedFuseException.class, () -> demoComponent.pause(1000));
 
-        assertFalse(stateProvider.GetState(PAUSE_NAME).IsClosed());
+        assertTrue(stateProvider.getState(PAUSE_NAME).isClosed());
+
+        assertThrows(TimedFuseException.class, () -> demoComponent.pause(1000));
+
+        assertFalse(stateProvider.getState(PAUSE_NAME).isClosed());
 
         // This will throw because it's opened
         assertThrows(TimedFuseException.class, () -> demoComponent.pause(10));
@@ -114,23 +114,23 @@ public class TimedFuseTest {
             throw new RuntimeException(e);
         }
 
-        assertTrue(stateProvider.GetState(PAUSE_NAME).IsClosed());
+        assertTrue(stateProvider.getState(PAUSE_NAME).isClosed());
     }
 
     @Test
     public void fuseShouldReOpenAfterTimeout() {
-        stateProvider.Reset();
+        stateProvider.reset();
         assertThrows(TimedFuseException.class, () -> demoComponent.pause(1000));
 
-        assertTrue(stateProvider.GetState(PAUSE_NAME).IsClosed());
-
-        assertThrows(TimedFuseException.class, () -> demoComponent.pause(1000));
-
-        assertTrue(stateProvider.GetState(PAUSE_NAME).IsClosed());
+        assertTrue(stateProvider.getState(PAUSE_NAME).isClosed());
 
         assertThrows(TimedFuseException.class, () -> demoComponent.pause(1000));
 
-        assertFalse(stateProvider.GetState(PAUSE_NAME).IsClosed());
+        assertTrue(stateProvider.getState(PAUSE_NAME).isClosed());
+
+        assertThrows(TimedFuseException.class, () -> demoComponent.pause(1000));
+
+        assertFalse(stateProvider.getState(PAUSE_NAME).isClosed());
 
         // This will throw because it's opened
         assertThrows(TimedFuseException.class, () -> demoComponent.pause(10));
@@ -142,10 +142,10 @@ public class TimedFuseTest {
             throw new RuntimeException(e);
         }
 
-        assertTrue(stateProvider.GetState(PAUSE_NAME).IsClosed());
+        assertTrue(stateProvider.getState(PAUSE_NAME).isClosed());
 
         assertThrows(TimedFuseException.class, () -> demoComponent.pause(1000));
 
-        assertFalse(stateProvider.GetState(PAUSE_NAME).IsClosed());
+        assertFalse(stateProvider.getState(PAUSE_NAME).isClosed());
     }
 }
