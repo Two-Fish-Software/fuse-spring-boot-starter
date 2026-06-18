@@ -65,7 +65,7 @@ publishing {
 
             pom {
                 //groupId = 'com.twofishsoftware'
-                //name = 'fuse-spring-boot-starter'
+                name = 'fuse-spring-boot-starter'
                 description = 'A Spring Boot Starter that provides annotations and functionality for Timed Fuses-- a simplification of the Circuit Breaker pattern.'
                 url = 'https://github.com/Two-Fish-Software/fuse-spring-boot-starter'
                 packaging = 'jar' // jar is the default, but still set it to make it clear
